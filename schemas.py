@@ -1,11 +1,11 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from datetime import datetime
 
 # Request body schema for creating user
 class UserCreate(BaseModel):
-    name: str
-    email: str
+    name: str = Field(min_length=3, max_length=35, pattern=r"^[a-zA-Z\s]+$")
+    email: str = Field(min_length=1)
 
 # Request body schema for updating user
 class UserUpdate(BaseModel):

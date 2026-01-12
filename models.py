@@ -32,6 +32,9 @@ class Expense(DeclarativeBase):
     user: Mapped["User"] = relationship(back_populates="expenses")
     # "expenses" is the attribute name in the User class 
 
+    # "expense.user = new_user" would update the user_id attribute
+    # relationship() establishes the relationship, the ORM finds attribute in Expense w/ ForeignKey
+
     amount: Mapped[float] = mapped_column(nullable=False)
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
     category: Mapped[Optional[str]] = mapped_column(nullable=True)
