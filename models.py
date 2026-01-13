@@ -13,6 +13,7 @@ class User(DeclarativeBase):
     name: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(nullable=False)
     # hashed_password: Mapped[str] = mapped_column(nullable=False)
+    budget: Mapped[float] = mapped_column(nullable=False)
     created_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -36,6 +37,7 @@ class Expense(DeclarativeBase):
     # relationship() establishes the relationship, the ORM finds attribute in Expense w/ ForeignKey
 
     amount: Mapped[float] = mapped_column(nullable=False)
+    paid: Mapped[bool] = mapped_column(nullable=False)
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
     category: Mapped[Optional[str]] = mapped_column(nullable=True)
     created_at: Mapped[DateTime] = mapped_column(

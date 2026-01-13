@@ -6,17 +6,20 @@ from datetime import datetime
 class UserCreate(BaseModel):
     name: str = Field(min_length=3, max_length=35, pattern=r"^[a-zA-Z\s]+$")
     email: str = Field(min_length=1)
+    budget: float
 
 # Request body schema for updating user
 class UserUpdate(BaseModel):
     name: Optional[str]
     email: Optional[str]
+    budget: Optional[float]
 
 # Response body schema for routes (what the API returns)
 class UserResponse(BaseModel):
     id: int
     name: str
     email: str
+    budget: float
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -24,6 +27,15 @@ class UserResponse(BaseModel):
 class ExpenseCreate(BaseModel):
     user_id: int
     amount: float
+    paid: bool 
+    description: Optional[str]
+    category: Optional[str]
+
+# Request body schema for updating expense
+class ExpenseUpdate(BaseModel):
+    user_id: Optional[int]
+    amount: Optional[float]
+    paid: Optional[bool]
     description: Optional[str]
     category: Optional[str]
 
@@ -32,6 +44,7 @@ class ExpenseResponse(BaseModel):
     id: int
     user_id: int
     amount: float
+    paid: bool
     description: Optional[str]
     category: Optional[str]
     created_at: datetime
