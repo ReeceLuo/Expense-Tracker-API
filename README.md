@@ -1,6 +1,6 @@
 # Expense Tracker API
 
-A RESTful API for tracking personal expenses built with FastAPI and PostgreSQL.
+A RESTful API for tracking personal expenses built with FastAPI and PostgreSQL. Made w/o AI (except README.md lol)
 
 ## Features
 
