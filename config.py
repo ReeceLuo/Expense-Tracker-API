@@ -1,13 +1,12 @@
-from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
 
-# Define application settigns
-class Settings(BaseModel):
+# Define application settings
+class Settings(BaseSettings):
     database_url: str
-    class Config:
-        env_file = ".env"
+    model_config = {"env_file": ".env"}
 
 # Load settings
 settings = Settings()

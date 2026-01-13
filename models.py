@@ -1,5 +1,5 @@
-from sqlalchemy import ForeignKey, DateTime, Mapped
-from sqlalchemy.orm import func, mapped_column, relationship
+from sqlalchemy import ForeignKey, DateTime, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional, List
 
 from config import DeclarativeBase

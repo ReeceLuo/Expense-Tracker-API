@@ -10,9 +10,9 @@ class UserCreate(BaseModel):
 
 # Request body schema for updating user
 class UserUpdate(BaseModel):
-    name: Optional[str]
-    email: Optional[str]
-    budget: Optional[float]
+    name: Optional[str] = None
+    email: Optional[str] = None
+    budget: Optional[float] = None
 
 # Response body schema for routes (what the API returns)
 class UserResponse(BaseModel):
@@ -28,16 +28,16 @@ class ExpenseCreate(BaseModel):
     user_id: int
     amount: float
     paid: bool 
-    description: Optional[str]
-    category: Optional[str]
+    description: Optional[str] = None
+    category: Optional[str] = None
 
 # Request body schema for updating expense
 class ExpenseUpdate(BaseModel):
-    user_id: Optional[int]
-    amount: Optional[float]
-    paid: Optional[bool]
-    description: Optional[str]
-    category: Optional[str]
+    user_id: Optional[int] = None
+    amount: Optional[float] = None
+    paid: Optional[bool] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
 
 # Response body schema for routes (what the API returns)
 class ExpenseResponse(BaseModel):
