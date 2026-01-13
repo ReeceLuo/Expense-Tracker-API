@@ -21,8 +21,9 @@ def create_user(user: UserCreate, db: Session=Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
+
 # Get user summary
-@router.get("/{user_id}/summary")
+@router.get("/{user_id}/summary", status_code=status.HTTP_200_OK)
 def get_total_user_expenses(user_id: int, db: Session=Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     
@@ -53,6 +54,7 @@ def get_total_user_expenses(user_id: int, db: Session=Depends(get_db)):
             "Remaining budget": remaining_budget,
             "Status": "Over budget" if remaining_budget < 0 else "On track"}
 
+
 # Get user
 @router.get("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
 def get_user(user_id: int, db: Session=Depends(get_db)):
@@ -65,6 +67,7 @@ def get_user(user_id: int, db: Session=Depends(get_db)):
         )
     
     return user
+
 
 # Update user
 @router.put("/{user_id}", response_model=UserResponse)
