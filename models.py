@@ -12,7 +12,7 @@ class User(DeclarativeBase):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(nullable=False)
-    # hashed_password: Mapped[str] = mapped_column(nullable=False)
+    hashed_password: Mapped[str] = mapped_column(nullable=False)
     budget: Mapped[float] = mapped_column(nullable=False)
     created_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True),

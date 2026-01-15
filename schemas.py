@@ -6,6 +6,7 @@ from datetime import datetime
 class UserCreate(BaseModel):
     name: str = Field(min_length=3, max_length=35, pattern=r"^[a-zA-Z\s]+$")
     email: str = Field(min_length=1)
+    password: str = Field(min_length=8)
     budget: float
 
 # Request body schema for updating user
@@ -22,6 +23,13 @@ class UserResponse(BaseModel):
     budget: float
 
     model_config = ConfigDict(from_attributes=True)
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    user_id: Optional[str] = None
 
 # Request body schema for creating expense
 class ExpenseCreate(BaseModel):
