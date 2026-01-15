@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 # Define application settings
 class Settings(BaseSettings):
     database_url: str
+    secret_key: str
     model_config = {"env_file": ".env"}
 
 # Load settings
