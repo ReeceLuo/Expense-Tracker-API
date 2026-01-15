@@ -33,7 +33,6 @@ class TokenData(BaseModel):
 
 # Request body schema for creating expense
 class ExpenseCreate(BaseModel):
-    user_id: int
     amount: float
     paid: bool 
     description: Optional[str] = None
@@ -41,7 +40,6 @@ class ExpenseCreate(BaseModel):
 
 # Request body schema for updating expense
 class ExpenseUpdate(BaseModel):
-    user_id: Optional[int] = None
     amount: Optional[float] = None
     paid: Optional[bool] = None
     description: Optional[str] = None

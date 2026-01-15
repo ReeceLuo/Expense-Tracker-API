@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from config import engine, DeclarativeBase
-from routes import ExpenseRoutes, UserRoutes
+from routes import ExpenseRoutes, UserRoutes, AuthRoutes
 
 DeclarativeBase.metadata.create_all(bind=engine)
 
@@ -12,6 +12,7 @@ app = FastAPI(
 
 app.include_router(ExpenseRoutes.router)
 app.include_router(UserRoutes.router)
+app.include_router(AuthRoutes.router)
 
 @app.get("/")
 def root():
