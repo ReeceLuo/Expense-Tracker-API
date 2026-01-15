@@ -4,11 +4,13 @@ A RESTful API for tracking personal expenses built with FastAPI and PostgreSQL. 
 
 ## Features
 
+- **JWT Authentication** - Secure token-based authentication with bcrypt password hashing
 - User management (create, read, update, delete)
 - Expense tracking with paid/unpaid status
 - User financial summaries with budget tracking
 - Expense categorization
 - PostgreSQL database with SQLAlchemy ORM
+- Protected endpoints with authorization checks
 
 ## Tech Stack
 
@@ -17,6 +19,8 @@ A RESTful API for tracking personal expenses built with FastAPI and PostgreSQL. 
 - **PostgreSQL** - Relational database
 - **Pydantic** - Data validation
 - **Uvicorn** - ASGI server
+- **python-jose** - JWT token handling
+- **passlib + bcrypt** - Password hashing
 
 ## Installation
 
@@ -42,11 +46,18 @@ pip install -r requirements.txt
 Create a `.env` file in the project root:
 ```
 database_url=postgresql://expense_tracker_user:expense_tracker_api@localhost:5432/expense_tracker_db
+SECRET_KEY=your-secret-key-here
 ```
 
 For SQLite (development):
 ```
 database_url=sqlite:///./expense_tracker.db
+SECRET_KEY=your-secret-key-here
+```
+
+Generate a secure SECRET_KEY:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 5. Set up PostgreSQL database (if using PostgreSQL)
@@ -69,28 +80,47 @@ Interactive API documentation: `http://127.0.0.1:8000/docs`
 
 ## API Endpoints
 
-### Users
-- `POST /users/` - Create a new user
-- `GET /users/{user_id}` - Get user details
-- `GET /users/{user_id}/summary` - Get user financial summary
-- `PUT /users/{user_id}` - Update user
-- `DELETE /users/{user_id}` - Delete user
+### Authentication
+- `POST /auth/register` - Register a new user
+- `POST /auth/login` - Login and receive JWT token
 
-### Expenses
+### Users (Protected - requires Bearer token)
+- `GET /users/me` - Get current user details
+- `GET /users/me/summary` - Get current user financial summary
+- `PUT /users/me` - Update current user
+- `DELETE /users/me` - Delete current user
+
+### Expenses (Protected - requires Bearer token)
 - `POST /expenses/` - Create a new expense
-- `GET /expenses/{expense_id}` - Get expense details
-- `GET /expenses/user/{user_id}` - Get all expenses for a user
-- `PUT /expenses/{expense_id}` - Update expense
+- `GET /expenses/{expense_id}` - Get expense details (own expenses only)
+- `GET /expenses/user` - Get all expenses for current user
+- `PUT /expenses/{expense_id}` - Update expense (own expenses only)
 - `PATCH /expenses/{expense_id}/toggle-paid` - Toggle expense paid status
-- `DELETE /expenses/{expense_id}` - Delete expense
+- `DELETE /expenses/{expense_id}` - Delete expense (own expenses only)
+
+## Authentication
+
+This API uses JWT (JSON Web Tokens) for authentication. To access protected endpoints:
+
+1. Register a new user at `POST /auth/register`
+2. Login at `POST /auth/login` to receive an access token
+3. Include the token in the `Authorization` header for protected requests:
+   ```
+   Authorization: Bearer <your-access-token>
+   ```
+
+Tokens expire after 30 minutes.
 
 ## Project Structure
 
 ```
 ExpenseTrackerAPI/
 ├── routes/
+│   ├── __init__.py        # Package initialization
+│   ├── AuthRoutes.py      # Authentication endpoints
 │   ├── UserRoutes.py      # User endpoint handlers
 │   └── ExpenseRoutes.py   # Expense endpoint handlers
+├── auth.py                # JWT authentication utilities
 ├── config.py              # Database configuration
 ├── models.py              # SQLAlchemy database models
 ├── schemas.py             # Pydantic validation schemas
