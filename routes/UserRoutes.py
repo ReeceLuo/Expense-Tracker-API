@@ -6,6 +6,7 @@ from config import get_db
 from models import User, Expense
 from schemas import UserUpdate, UserResponse
 from auth import get_current_user
+from redis_client import get_cache, set_cache, delete_cache_pattern, cache_key
 
 
 router = APIRouter(
@@ -19,6 +20,13 @@ def get_total_user_expenses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # Try to get from cache first
+    cache_key_str = cache_key("user_summary", current_user.id)
+    cached_result = get_cache(cache_key_str)
+    if cached_result is not None:
+        return cached_result
+    
+    # Calculate summary
     total_expenses = db.query(func.sum(Expense.amount)).filter(Expense.user_id == current_user.id).scalar() or 0.0
     total_paid = db.query(func.sum(Expense.amount)).filter(
         Expense.user_id == current_user.id,
@@ -32,13 +40,19 @@ def get_total_user_expenses(
     ).count()
     num_expenses = db.query(Expense).filter(Expense.user_id == current_user.id).count()
 
-    return {"User": current_user.name, 
-            "Total expenses to pay": total_expenses,
-            "Expenses paid": f"{num_expenses_paid} / {num_expenses}",
-            "Budget": current_user.budget,
-            "Total paid": total_paid,
-            "Remaining budget": remaining_budget,
-            "Status": "Over budget" if remaining_budget < 0 else "On track"}
+    result = {
+        "User": current_user.name, 
+        "Total expenses to pay": total_expenses,
+        "Expenses paid": f"{num_expenses_paid} / {num_expenses}",
+        "Budget": current_user.budget,
+        "Total paid": total_paid,
+        "Remaining budget": remaining_budget,
+        "Status": "Over budget" if remaining_budget < 0 else "On track"
+    }
+    
+    # Cache for 2 minutes (120 seconds)
+    set_cache(cache_key_str, result, expire=120)
+    return result
 
 
 # Get user
@@ -60,6 +74,10 @@ def update_user(
 
     db.commit()
     db.refresh(current_user)
+    
+    # Invalidate user summary cache
+    delete_cache_pattern(f"user_summary:{current_user.id}*")
+    
     return current_user
 
 
@@ -69,6 +87,11 @@ def delete_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    user_id = current_user.id
     db.delete(current_user)
     db.commit()
+    
+    # Invalidate all user-related cache
+    delete_cache_pattern(f"user_summary:{user_id}*")
+    
     return None

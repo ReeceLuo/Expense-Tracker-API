@@ -1,6 +1,6 @@
 # Expense Tracker API
 
-A RESTful API for tracking personal expenses built with FastAPI and PostgreSQL. Made w/o AI (except README.md lol)
+A RESTful API for tracking personal expenses built with FastAPI and PostgreSQL.
 
 ## Features
 
@@ -11,16 +11,19 @@ A RESTful API for tracking personal expenses built with FastAPI and PostgreSQL. 
 - Expense categorization
 - PostgreSQL database with SQLAlchemy ORM
 - Protected endpoints with authorization checks
+- **Redis Caching** - Response caching for expensive queries (user summaries)
+- **Rate Limiting** - Protection against abuse on authentication endpoints
 
 ## Tech Stack
 
 - **FastAPI** - Modern Python web framework
 - **SQLAlchemy** - SQL toolkit and ORM
 - **PostgreSQL** - Relational database
+- **Redis** - In-memory caching and rate limiting
 - **Pydantic** - Data validation
 - **Uvicorn** - ASGI server
 - **python-jose** - JWT token handling
-- **passlib + bcrypt** - Password hashing
+- **bcrypt** - Password hashing
 
 ## Installation
 
@@ -47,13 +50,19 @@ Create a `.env` file in the project root:
 ```
 database_url=postgresql://expense_tracker_user:expense_tracker_api@localhost:5432/expense_tracker_db
 SECRET_KEY=your-secret-key-here
+redis_url=redis://localhost:6379/0
+redis_enabled=true
 ```
 
 For SQLite (development):
 ```
 database_url=sqlite:///./expense_tracker.db
 SECRET_KEY=your-secret-key-here
+redis_url=redis://localhost:6379/0
+redis_enabled=true
 ```
+
+**Note:** Redis is optional. If `redis_enabled=false` or Redis is unavailable, the application will continue to work without caching and rate limiting.
 
 Generate a secure SECRET_KEY:
 ```bash
@@ -66,6 +75,27 @@ CREATE USER expense_tracker_user WITH PASSWORD 'expense_tracker_api';
 CREATE DATABASE expense_tracker_db OWNER expense_tracker_user;
 GRANT ALL PRIVILEGES ON SCHEMA public TO expense_tracker_user;
 ```
+
+6. Set up Redis (optional but recommended)
+
+**Using Docker:**
+```bash
+docker run -d -p 6379:6379 redis:7-alpine
+```
+
+**Using Homebrew (macOS):**
+```bash
+brew install redis
+brew services start redis
+```
+
+**Using apt (Ubuntu/Debian):**
+```bash
+sudo apt-get install redis-server
+sudo systemctl start redis-server
+```
+
+The application will automatically connect to Redis on startup. If Redis is unavailable, the app will continue to work without caching and rate limiting.
 
 ## Running the Application
 
@@ -111,6 +141,18 @@ This API uses JWT (JSON Web Tokens) for authentication. To access protected endp
 
 Tokens expire after 30 minutes.
 
+## Caching & Rate Limiting
+
+### Caching
+- **User Summary** (`GET /users/me/summary`) - Cached for 2 minutes
+- Cache is automatically invalidated when expenses or user data changes
+- Redis is used for caching, but the app works without it
+
+### Rate Limiting
+- **Registration** (`POST /auth/register`) - 5 requests per 15 minutes per IP
+- **Login** (`POST /auth/login`) - 10 requests per 15 minutes per IP
+- Rate limit headers are included in responses: `X-RateLimit-Remaining`, `X-RateLimit-Limit`
+
 ## Project Structure
 
 ```
@@ -121,7 +163,8 @@ ExpenseTrackerAPI/
 │   ├── UserRoutes.py      # User endpoint handlers
 │   └── ExpenseRoutes.py   # Expense endpoint handlers
 ├── auth.py                # JWT authentication utilities
-├── config.py              # Database configuration
+├── config.py              # Database and Redis configuration
+├── redis_client.py        # Redis client and caching utilities
 ├── models.py              # SQLAlchemy database models
 ├── schemas.py             # Pydantic validation schemas
 ├── main.py                # FastAPI application entry point

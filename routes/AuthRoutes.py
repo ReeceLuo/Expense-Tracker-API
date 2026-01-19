@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -12,6 +12,7 @@ from auth import (
     create_access_token,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from redis_client import check_rate_limit, get_client_ip
 
 router = APIRouter(
     prefix="/auth",
@@ -19,7 +20,18 @@ router = APIRouter(
 )
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register(user: UserCreate, db: Session = Depends(get_db)):
+def register(user: UserCreate, request: Request, db: Session = Depends(get_db)):
+    # Rate limiting: 5 registrations per 15 minutes per IP
+    ip = get_client_ip(request)
+    rate_key = f"rate_limit:register:{ip}"
+    allowed, remaining = check_rate_limit(rate_key, limit=5, window=900)
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many registration attempts. Please try again later.",
+            headers={"X-RateLimit-Remaining": str(remaining)}
+        )
+    
     # Check if user already exists
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
@@ -43,9 +55,21 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
+    # Rate limiting: 10 login attempts per 15 minutes per IP
+    ip = get_client_ip(request)
+    rate_key = f"rate_limit:login:{ip}"
+    allowed, remaining = check_rate_limit(rate_key, limit=10, window=900)
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts. Please try again later.",
+            headers={"X-RateLimit-Remaining": str(remaining)}
+        )
+    
     # Find user by email
     user = db.query(User).filter(User.email == form_data.username).first()
 

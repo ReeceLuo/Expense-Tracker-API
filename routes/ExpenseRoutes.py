@@ -6,6 +6,7 @@ from config import get_db
 from models import Expense, User
 from schemas import ExpenseCreate, ExpenseResponse, ExpenseUpdate
 from auth import get_current_user
+from redis_client import get_cache, set_cache, delete_cache_pattern, cache_key
 
 
 router = APIRouter(
@@ -31,6 +32,10 @@ def create_expense(
     db.add(new_expense)
     db.commit()
     db.refresh(new_expense)
+    
+    # Invalidate user summary cache (expenses list not cached)
+    delete_cache_pattern(f"user_summary:{current_user.id}*")
+    
     return new_expense
 
 
@@ -40,6 +45,8 @@ def get_user_expenses(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    # Note: Not caching expense lists as they change frequently
+    # Cache invalidation would be too frequent, reducing cache effectiveness
     user_expenses = db.query(Expense).filter(Expense.user_id == current_user.id).all()
     return user_expenses
 
@@ -96,6 +103,10 @@ def update_expense(
 
     db.commit()
     db.refresh(expense)
+    
+    # Invalidate user summary cache (expenses list not cached)
+    delete_cache_pattern(f"user_summary:{current_user.id}*")
+    
     return expense
 
 
@@ -123,6 +134,10 @@ def toggle_paid(
     expense.paid = not expense.paid
     db.commit()
     db.refresh(expense)
+    
+    # Invalidate user summary cache (expenses list not cached)
+    delete_cache_pattern(f"user_summary:{current_user.id}*")
+    
     return expense
 
 # Delete expense
@@ -146,6 +161,11 @@ def delete_expense(
             detail="User is not authorized to delete this expense"
         )
 
+    user_id = expense.user_id
     db.delete(expense)
     db.commit()
+    
+    # Invalidate user summary cache
+    delete_cache_pattern(f"user_summary:{user_id}*")
+    
     return None

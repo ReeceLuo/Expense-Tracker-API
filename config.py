@@ -7,6 +7,8 @@ from sqlalchemy.ext.declarative import declarative_base
 class Settings(BaseSettings):
     database_url: str
     secret_key: str
+    redis_url: str = "redis://localhost:6379/0"
+    redis_enabled: bool = True
     model_config = {"env_file": ".env"}
 
 # Load settings
