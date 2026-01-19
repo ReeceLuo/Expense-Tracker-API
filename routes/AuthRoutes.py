@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from config import get_db
 from models import User
-from schemas import Token, UserCreate, UserResponse
+from schemas import UserCreate, UserResponse
 from auth import (
     verify_password,
     get_password_hash,
@@ -24,7 +24,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
         raise HTTPException(
-            status_code = status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered."
         )
     
@@ -64,6 +64,3 @@ def login(
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
-
-
-
