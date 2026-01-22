@@ -1,4 +1,4 @@
-# Expense Tracker API
+# EasyExpense
 
 A RESTful API for tracking personal expenses built with FastAPI and PostgreSQL.
 
